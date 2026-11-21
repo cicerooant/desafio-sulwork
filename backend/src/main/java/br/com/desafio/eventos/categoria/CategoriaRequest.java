@@ -7,6 +7,6 @@ import jakarta.validation.constraints.Size;
 
 public record CategoriaRequest(
         @NotBlank @Size(max = 100) String nome,
-        @NotNull @Positive Integer metaQuantidade
+        @Positive Integer metaQuantidade
 ) {
 }

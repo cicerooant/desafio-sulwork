@@ -10,6 +10,8 @@ public interface InscricaoEventoRepository extends JpaRepository<InscricaoEvento
 
     Optional<InscricaoEvento> findByIdAndEventoId(Long id, Long eventoId);
 
+    Optional<InscricaoEvento> findByEventoIdAndColaboradorId(Long eventoId, Long colaboradorId);
+
     boolean existsByEventoIdAndColaboradorId(Long eventoId, Long colaboradorId);
 
     boolean existsByColaboradorId(Long colaboradorId);

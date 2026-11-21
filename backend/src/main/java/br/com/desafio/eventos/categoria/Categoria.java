@@ -12,7 +12,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
@@ -39,9 +38,8 @@ public class Categoria {
     @Column(nullable = false, length = 100)
     private String nome;
 
-    @NotNull
     @Positive
-    @Column(name = "meta_quantidade", nullable = false)
+    @Column(name = "meta_quantidade")
     private Integer metaQuantidade;
 
     protected Categoria() {
