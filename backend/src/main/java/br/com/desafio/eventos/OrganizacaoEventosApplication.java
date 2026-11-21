@@ -1,0 +1,12 @@
+package br.com.desafio.eventos;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class OrganizacaoEventosApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(OrganizacaoEventosApplication.class, args);
+    }
+}

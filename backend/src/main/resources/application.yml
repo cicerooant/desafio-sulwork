@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: organizacao-eventos
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/alimentacao}
+    username: ${DB_USERNAME:alimentacao}
+    password: ${DB_PASSWORD:alimentacao}
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+  flyway:
+    enabled: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html

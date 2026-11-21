@@ -1,0 +1,11 @@
+# Java
+backend/target/
+*.class
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Environment
+.env
