@@ -6,14 +6,35 @@ services:
       POSTGRES_USER: alimentacao
       POSTGRES_PASSWORD: alimentacao
     ports:
-      - "5432:5432"
+      - "55432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U alimentacao -d alimentacao"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/alimentacao
+      DB_USERNAME: alimentacao
+      DB_PASSWORD: alimentacao
+    ports:
+      - "18080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "4173:80"
+    depends_on:
+      - backend
 
 volumes:
   postgres_data:
