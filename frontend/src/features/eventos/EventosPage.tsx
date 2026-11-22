@@ -1,9 +1,23 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
-import { criarEvento, listarEventos } from './api'
-import type { NovoEvento, StatusEvento } from './types'
+import { alterarStatusEvento, atualizarEvento, criarEvento, excluirEvento, listarEventos } from './api'
+import type { Evento, NovoEvento, StatusEvento } from './types'
 import { Link } from 'react-router-dom'
+
+function proximoStatus(status: StatusEvento): StatusEvento {
+  if (status === 'RASCUNHO') return 'ABERTO'
+  if (status === 'ABERTO') return 'ENCERRADO'
+  if (status === 'ENCERRADO') return 'REALIZADO'
+  return status
+}
+
+function textoAcaoStatus(status: StatusEvento): string {
+  if (status === 'RASCUNHO') return 'Abrir evento'
+  if (status === 'ABERTO') return 'Encerrar evento'
+  if (status === 'ENCERRADO') return 'Marcar realizado'
+  return 'Status final'
+}
 
 const labelsStatus: Record<StatusEvento, string> = {
   RASCUNHO: 'Rascunho',
@@ -18,6 +32,8 @@ export default function EventosPage() {
   const [busca, setBusca] = useState('')
   const [statusFiltro, setStatusFiltro] = useState<'TODOS' | StatusEvento>('TODOS')
   const [modalAberto, setModalAberto] = useState(false)
+  const [eventoEditando, setEventoEditando] = useState<Evento | null>(null)
+  const [erroAcao, setErroAcao] = useState<string | null>(null)
   const eventosQuery = useQuery({ queryKey: ['eventos'], queryFn: listarEventos })
   const criarMutation = useMutation({
     mutationFn: criarEvento,
@@ -25,6 +41,29 @@ export default function EventosPage() {
       await queryClient.invalidateQueries({ queryKey: ['eventos'] })
       setModalAberto(false)
     },
+  })
+  const atualizarMutation = useMutation({
+    mutationFn: ({ id, evento }: { id: number; evento: NovoEvento }) => atualizarEvento(id, evento),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['eventos'] })
+      setEventoEditando(null)
+    },
+  })
+  const statusMutation = useMutation({
+    mutationFn: ({ id, status }: { id: number; status: StatusEvento }) => alterarStatusEvento(id, status),
+    onSuccess: async () => {
+      setErroAcao(null)
+      await queryClient.invalidateQueries({ queryKey: ['eventos'] })
+    },
+    onError: (erro) => setErroAcao(erro.message),
+  })
+  const excluirMutation = useMutation({
+    mutationFn: excluirEvento,
+    onSuccess: async () => {
+      setErroAcao(null)
+      await queryClient.invalidateQueries({ queryKey: ['eventos'] })
+    },
+    onError: (erro) => setErroAcao(erro.message),
   })
 
   const eventosFiltrados = useMemo(() => {
@@ -104,6 +143,11 @@ export default function EventosPage() {
               Não foi possível carregar os eventos.
             </p>
           )}
+          {erroAcao && (
+            <p className="mt-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-800" role="alert">
+              {erroAcao}
+            </p>
+          )}
 
           {!eventosQuery.isLoading && !eventosQuery.isError && eventosFiltrados.length === 0 && (
             <div className="mt-6 rounded-2xl border border-dashed border-[#d6ddd4] bg-white py-12 text-center">
@@ -127,17 +171,79 @@ export default function EventosPage() {
                 <p className="mt-3 text-xs text-[#687268]">
                   {evento.tipo} • {new Date(evento.dataHora).toLocaleString('pt-BR')}
                 </p>
-                <Link
-                  className="mt-4 inline-block text-sm font-semibold text-moss hover:underline"
-                  to={`/eventos/${evento.id}/organizacao`}
-                >
-                  Organizar categorias e itens →
-                </Link>
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <Link
+                    className="text-sm font-semibold text-moss hover:underline"
+                    to={`/eventos/${evento.id}/organizacao`}
+                  >
+                    Organizar categorias e itens →
+                  </Link>
+                  <Link
+                    className="text-sm font-semibold text-moss hover:underline"
+                    to={`/eventos/${evento.id}/colaboracao`}
+                  >
+                    Ver cobertura →
+                  </Link>
+                  {(evento.status === 'RASCUNHO' || evento.status === 'ABERTO') && (
+                    <button
+                      className="text-sm font-semibold text-[#657065] hover:underline"
+                      onClick={() => setEventoEditando(evento)}
+                      type="button"
+                    >
+                      Editar
+                    </button>
+                  )}
+                  {evento.status !== 'REALIZADO' && evento.status !== 'CANCELADO' && (
+                    <button
+                      className="text-sm font-semibold text-[#657065] hover:underline"
+                      onClick={() => statusMutation.mutate({ id: evento.id, status: proximoStatus(evento.status) })}
+                      type="button"
+                    >
+                      {textoAcaoStatus(evento.status)}
+                    </button>
+                  )}
+                  {evento.status !== 'REALIZADO' && evento.status !== 'CANCELADO' && (
+                    <button
+                      className="text-sm font-semibold text-rose-700 hover:underline"
+                      onClick={() => {
+                        if (window.confirm('Cancelar este evento?')) {
+                          statusMutation.mutate({ id: evento.id, status: 'CANCELADO' })
+                        }
+                      }}
+                      type="button"
+                    >
+                      Cancelar
+                    </button>
+                  )}
+                  {evento.status === 'RASCUNHO' && (
+                    <button
+                      className="text-sm font-semibold text-rose-700 hover:underline"
+                      onClick={() => {
+                        if (window.confirm('Excluir este evento em rascunho?')) {
+                          excluirMutation.mutate(evento.id)
+                        }
+                      }}
+                      type="button"
+                    >
+                      Excluir
+                    </button>
+                  )}
+                </div>
               </article>
             ))}
           </div>
         </section>
       </main>
+
+      {eventoEditando && (
+        <ModalEditarEvento
+          criando={atualizarMutation.isPending}
+          erro={atualizarMutation.error?.message}
+          evento={eventoEditando}
+          onClose={() => setEventoEditando(null)}
+          onSubmit={(evento) => atualizarMutation.mutateAsync({ id: eventoEditando.id, evento })}
+        />
+      )}
 
       {modalAberto && (
         <ModalNovoEvento
@@ -156,6 +262,80 @@ function Resumo({ titulo, valor }: { titulo: string; valor: number }) {
     <div className="rounded-2xl border border-line bg-white p-5 shadow-card">
       <p className="text-xs font-medium text-[#7b857b]">{titulo}</p>
       <p className="mt-2 text-3xl font-semibold">{valor}</p>
+    </div>
+  )
+}
+
+function ModalEditarEvento({
+  criando,
+  erro,
+  evento,
+  onClose,
+  onSubmit,
+}: {
+  criando: boolean
+  erro?: string
+  evento: Evento
+  onClose: () => void
+  onSubmit: (evento: NovoEvento) => Promise<unknown>
+}) {
+  const { register, handleSubmit, getValues, formState: { errors } } = useForm<NovoEvento>({
+    defaultValues: {
+      nome: evento.nome,
+      descricao: evento.descricao ?? '',
+      tipo: evento.tipo,
+      dataHora: evento.dataHora.slice(0, 16),
+      prazoAlteracao: evento.prazoAlteracao.slice(0, 16),
+    },
+  })
+
+  return (
+    <div className="fixed inset-0 z-30 flex items-center justify-center bg-[#172018]/40 p-4" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
+      <section aria-labelledby="modal-editar-titulo" aria-modal="true" className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl" role="dialog">
+        <h2 id="modal-editar-titulo" className="text-2xl font-semibold">Editar evento</h2>
+        <form className="mt-6 space-y-4" onSubmit={handleSubmit((dados) => onSubmit({
+          ...dados,
+          dataHora: `${dados.dataHora}:00`,
+          prazoAlteracao: `${dados.prazoAlteracao}:00`,
+        }))}>
+          <label className="block">
+            <span className="campo-label">Nome do evento</span>
+            <input className="campo-formulario" {...register('nome', { required: 'Informe o nome do evento.' })} />
+            {errors.nome && <span className="mensagem-erro">{errors.nome.message}</span>}
+          </label>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="block">
+              <span className="campo-label">Tipo</span>
+              <input className="campo-formulario" {...register('tipo', { required: true })} />
+            </label>
+            <label className="block">
+              <span className="campo-label">Data e horário</span>
+              <input className="campo-formulario" type="datetime-local" {...register('dataHora', { required: true })} />
+            </label>
+          </div>
+          <label className="block">
+            <span className="campo-label">Prazo para alterações</span>
+            <input
+              className="campo-formulario"
+              type="datetime-local"
+              {...register('prazoAlteracao', {
+                required: 'Informe o prazo para alterações.',
+                validate: (prazo) => prazo < getValues('dataHora') || 'O prazo precisa ser anterior à data do evento.',
+              })}
+            />
+            {errors.prazoAlteracao && <span className="mensagem-erro">{errors.prazoAlteracao.message}</span>}
+          </label>
+          <label className="block">
+            <span className="campo-label">Descrição (opcional)</span>
+            <textarea className="campo-formulario min-h-20" {...register('descricao')} />
+          </label>
+          {erro && <p className="rounded-lg bg-rose-50 p-3 text-sm text-rose-800">{erro}</p>}
+          <div className="flex justify-end gap-3 border-t border-line pt-4">
+            <button className="botao-secundario" onClick={onClose} type="button">Cancelar</button>
+            <button className="botao-principal" disabled={criando} type="submit">{criando ? 'Salvando...' : 'Salvar alterações'}</button>
+          </div>
+        </form>
+      </section>
     </div>
   )
 }

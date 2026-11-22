@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import EventosPage from './features/eventos/EventosPage'
 import ParticipantesPage from './features/participantes/ParticipantesPage'
 import OrganizacaoPage from './features/organizacao/OrganizacaoPage'
+import ColaboracaoPage from './features/colaboracao/ColaboracaoPage'
 
 export default function App() {
   return (
@@ -9,6 +10,7 @@ export default function App() {
       <Route path="/eventos" element={<EventosPage />} />
       <Route path="/participantes" element={<ParticipantesPage />} />
       <Route path="/eventos/:eventoId/organizacao" element={<OrganizacaoPage />} />
+      <Route path="/eventos/:eventoId/colaboracao" element={<ColaboracaoPage />} />
       <Route path="*" element={<Navigate to="/eventos" replace />} />
     </Routes>
   )

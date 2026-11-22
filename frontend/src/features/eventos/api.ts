@@ -1,4 +1,4 @@
-import type { Evento, NovoEvento } from './types'
+import type { Evento, NovoEvento, StatusEvento } from './types'
 
 async function requisicao<T>(caminho: string, init?: RequestInit): Promise<T> {
   const resposta = await fetch(caminho, {
@@ -26,5 +26,23 @@ export function criarEvento(evento: NovoEvento) {
   return requisicao<Evento>('/api/eventos', {
     method: 'POST',
     body: JSON.stringify(evento),
+  })
+}
+
+export function atualizarEvento(id: number, evento: NovoEvento) {
+  return requisicao<Evento>(`/api/eventos/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(evento),
+  })
+}
+
+export function excluirEvento(id: number) {
+  return requisicao<void>(`/api/eventos/${id}`, { method: 'DELETE' })
+}
+
+export function alterarStatusEvento(id: number, status: StatusEvento) {
+  return requisicao<Evento>(`/api/eventos/${id}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
   })
 }

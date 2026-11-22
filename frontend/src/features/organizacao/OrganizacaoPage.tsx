@@ -85,7 +85,12 @@ export default function OrganizacaoPage() {
       </header>
 
       <main className="mx-auto max-w-6xl px-5 pb-16 pt-10 sm:px-8">
-        <Link className="text-sm text-[#657065] hover:text-moss" to="/eventos">← Voltar aos eventos</Link>
+        <div className="flex items-center justify-between">
+          <Link className="text-sm text-[#657065] hover:text-moss" to="/eventos">← Voltar aos eventos</Link>
+          <Link className="text-sm font-semibold text-moss hover:underline" to={`/eventos/${eventoId}/colaboracao`}>
+            Ver contribuições e cobertura →
+          </Link>
+        </div>
         <div className="mt-5 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-sm font-medium text-moss">Organização do evento</p>

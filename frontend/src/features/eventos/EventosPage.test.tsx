@@ -75,6 +75,47 @@ describe('EventosPage', () => {
     })
   })
 
+  it('abre um evento em rascunho', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify([{
+        id: 1,
+        nome: 'Almoço de boas-vindas',
+        descricao: 'Receber o time',
+        tipo: 'ALMOCO',
+        dataHora: '2027-04-15T12:30:00',
+        prazoAlteracao: '2027-04-14T18:00:00',
+        status: 'RASCUNHO',
+      }]), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        id: 1,
+        nome: 'Almoço de boas-vindas',
+        descricao: 'Receber o time',
+        tipo: 'ALMOCO',
+        dataHora: '2027-04-15T12:30:00',
+        prazoAlteracao: '2027-04-14T18:00:00',
+        status: 'ABERTO',
+      }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify([{
+        id: 1,
+        nome: 'Almoço de boas-vindas',
+        descricao: 'Receber o time',
+        tipo: 'ALMOCO',
+        dataHora: '2027-04-15T12:30:00',
+        prazoAlteracao: '2027-04-14T18:00:00',
+        status: 'ABERTO',
+      }]), { status: 200 }))
+    vi.stubGlobal('fetch', fetchMock)
+    const user = userEvent.setup()
+
+    renderizar()
+    await user.click(await screen.findByRole('button', { name: 'Abrir evento' }))
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3))
+    const chamadaStatus = fetchMock.mock.calls.find((chamada) => chamada[1]?.method === 'PATCH')
+    expect(chamadaStatus).toBeDefined()
+    expect(JSON.parse(chamadaStatus?.[1]?.body as string)).toEqual({ status: 'ABERTO' })
+  })
+
   it('impede prazo igual à data do evento', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([]), { status: 200 })))
     const user = userEvent.setup()
