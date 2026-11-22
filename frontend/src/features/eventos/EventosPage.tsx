@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { criarEvento, listarEventos } from './api'
 import type { NovoEvento, StatusEvento } from './types'
+import { Link } from 'react-router-dom'
 
 const labelsStatus: Record<StatusEvento, string> = {
   RASCUNHO: 'Rascunho',
@@ -38,10 +39,14 @@ export default function EventosPage() {
     <div className="min-h-screen bg-canvas text-ink">
       <header className="border-b border-line bg-white">
         <div className="mx-auto flex h-[76px] max-w-6xl items-center justify-between px-5 sm:px-8">
-          <div>
+          <Link to="/eventos">
             <p className="text-base font-semibold">mesa comum</p>
             <p className="text-xs text-[#879087]">organizar fica mais leve</p>
-          </div>
+          </Link>
+          <nav className="flex gap-4 text-sm" aria-label="Navegação principal">
+            <Link to="/eventos" className="font-semibold text-moss">Eventos</Link>
+            <Link to="/participantes" className="text-[#657065] hover:text-moss">Participantes</Link>
+          </nav>
         </div>
       </header>
 
