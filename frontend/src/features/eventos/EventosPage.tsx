@@ -127,6 +127,12 @@ export default function EventosPage() {
                 <p className="mt-3 text-xs text-[#687268]">
                   {evento.tipo} • {new Date(evento.dataHora).toLocaleString('pt-BR')}
                 </p>
+                <Link
+                  className="mt-4 inline-block text-sm font-semibold text-moss hover:underline"
+                  to={`/eventos/${evento.id}/organizacao`}
+                >
+                  Organizar categorias e itens →
+                </Link>
               </article>
             ))}
           </div>
